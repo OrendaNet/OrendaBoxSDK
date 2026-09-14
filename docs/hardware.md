@@ -56,7 +56,9 @@ const sample = await box.usb.read(selectedDeviceId, {
 const bytes = Buffer.from(sample.dataBase64, 'base64');
 ```
 
-For a USB serial scanner configured to emit UTF-8 text, collect these bytes until the scanner's documented line terminator arrives, then process one barcode. Preserve incomplete records between reads, impose a maximum barcode length, and handle `bytes: 0` as no new data. HID raw devices return HID reports, not UTF-8 text; use a parser for that scanner's report format. Do not treat arbitrary binary reports as text.
+For a USB serial scanner configured to emit UTF-8 text, collect these bytes until the scanner's documented line terminator arrives, then process one barcode. Preserve incomplete records between reads, impose a maximum barcode length, and handle `bytes: 0` as no new data. HID raw devices return HID reports, not UTF-8 text; use a parser for that scanner's report format. The optional `sample.reports` array contains each complete report in base64, while `dataBase64` contains their concatenated bytes. Do not treat arbitrary binary reports as text.
+
+Edge retains the read descriptor between requests so HID reports arriving while your app processes a batch are not discarded. Readers expire after 15 seconds idle or when access is revoked. A read coalesces a burst until 40 ms idle, the requested byte limit, or its timeout. Choose a byte limit large enough for a complete HID report (maximum 4096 bytes). Use the five-second wait when idle and respect the runtime's 120-request-per-minute budget instead of continuously polling with short timeouts.
 
 The initial broker supports selected `hidraw`, `ttyUSB`, `ttyACM`, and USB printer character devices. It does not expose all `/dev/input` events, raw libusb, storage devices, or the entire USB bus. Serial baud rates are configured by the administrator on the selected grant. Unplugged or unsupported hardware should produce a visible retry/setup state. Physical scanner compatibility depends on its Linux interface and report format.
 
