@@ -36,6 +36,9 @@ test('release validation requires an ARM64 pinned artifact and safe capabilities
   assert.ok(validateManifest(manifest, { release: true }).length);
   const ready = { ...manifest, versions: [{ version: '1.0.0', minPlatformVersion: '0.2.45', architectures: ['arm64'], image: 'registry.example/app@sha256:' + 'a'.repeat(64) }] };
   assert.deepEqual(validateManifest(ready, { release: true }), []);
+  assert.ok(validateManifest({ ...ready, versions: [{ ...ready.versions[0], digest: 'sha256:' + 'b'.repeat(64) }] }, { release: true }).length);
+  assert.ok(validateManifest({ ...ready, versions: [{ ...ready.versions[0], architectures: ['arm64', 'mips'] }] }, { release: true }).length);
+  assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, healthPath: '//health' } } }).length);
   assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, capabilities: ['admin'] } } }).length);
 });
 
