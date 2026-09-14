@@ -72,11 +72,17 @@ const context = await runtime.context();
 const settings = await runtime.config();       // requires config:read
 const tags = await runtime.listPlcTags();       // requires plc:read
 const readings = await runtime.readPlcTags(['temperature']);
+const history = await runtime.metrics.queryRange('plc_tag_value', {
+  start: Date.now() / 1000 - 3600, end: Date.now() / 1000, step: 60
+});                                            // requires prometheus:read
+const notes = runtime.mongo.collection('notes');
+const saved = await notes.insertOne({ title: 'Shift handover', status: 'open' }); // mongodb:write
+const openNotes = await notes.find({ status: 'open' }, { limit: 20 });          // mongodb:read
 ```
 
-Keep these helpers on your server. The browser calls your own authenticated app API; it never receives the runtime token or proxy secret. Check the user’s roles before performing app mutations. A PLC read capability applies to all configured PLC tags on that Box, so request it only when your app needs that data.
+Keep these helpers on your server. The browser calls your own authenticated app API; it never receives the runtime token or proxy secret. Check the user’s roles before performing app mutations. PLC and Prometheus read capabilities cover their data across the Box; MongoDB access is isolated to the app’s own database. No service URL, database setup, username or password is required in app code. Enable only the capabilities you use in `metadata.orenda.capabilities`, then submit them for review.
 
-See [runtime APIs and ownership](docs/runtime-api.md), [manifest reference](docs/manifest.md), and [design and security constraints](docs/design-constraints.md). Existing services remain the source of their data; this SDK does not introduce another identity, organization, PLC, or database server.
+See the [PLC, metrics and MongoDB cookbook](docs/core-services.md), [runtime APIs and ownership](docs/runtime-api.md), [manifest reference](docs/manifest.md), and [design and security constraints](docs/design-constraints.md). Existing services remain the source of their data; this SDK does not introduce another identity, organization, PLC, or database server.
 
 ## Verify the SDK
 

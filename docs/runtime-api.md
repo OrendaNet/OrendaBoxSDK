@@ -29,10 +29,23 @@ Paths below are relative to `/api/v1/runtime`:
 | `GET /config` | `config:read` | `{ appId, config }` containing only this app’s Edge-managed settings. |
 | `GET /plc/tags` | `plc:read` | Existing PLC collector `/api/tags` response. |
 | `POST /plc/read` | `plc:read` | Existing PLC collector `/api/read` response for `{ "tags": ["name"] }`. Between 1 and 100 tag names. |
+| `POST /prometheus/query` | `prometheus:read` | `{ query, time? }`; returns the existing Prometheus instant-query envelope. |
+| `POST /prometheus/query-range` | `prometheus:read` | `{ query, start, end, step }`; returns the existing range-query envelope. |
+| `GET /prometheus/metrics?prefix=plc_` | `prometheus:read` | `{ metrics, truncated }`; up to 2,000 metric names with the optional prefix. |
+| `GET /mongodb/collections` | `mongodb:read` | This app’s collection names and storage limits. |
+| `POST /mongodb/collections/:name/find` | `mongodb:read` | `{ filter?, sort?, limit?, skip? }` → `{ documents, limit, skip }`. |
+| `GET /mongodb/collections/:name/documents/:id` | `mongodb:read` | `{ document }` or `404`. |
+| `POST /mongodb/collections/:name/documents` | `mongodb:write` | `{ document }` → `{ insertedId }`; Box-generated string UUID. |
+| `PUT /mongodb/collections/:name/documents/:id` | `mongodb:write` | `{ document }`; replaces this document while preserving its ID. |
+| `DELETE /mongodb/collections/:name/documents/:id` | `mongodb:write` | `{ deletedCount }`; deletes this one document. |
 
-The PLC routes delegate to OrendaPLCLibrary on the Box. They do not create a second collector or copy its config. `plc:read` grants read access to configured tags across the Box. PLC writes, device reconfiguration, raw database access, shell access, and organization mutations are not app runtime capabilities in v1. `401` means the install credential is invalid; `403` means the capability was not approved; `502` means the underlying collector is unavailable. Show a useful retry state and preserve unsaved app input.
+The PLC routes delegate to OrendaPLCLibrary on the Box. They do not create a second collector or copy its config. `plc:read` grants read access to configured tags across the Box. `prometheus:read` reads the existing Box metrics database; it cannot reload Prometheus, change rules, or run administrative operations. MongoDB routes use the existing core database and derive a private database namespace exclusively from the installed app identity. An app cannot supply a database name, connect URI, pipeline, or command. No shared Mongo credentials are returned to the container.
 
-App settings are edited through the existing Edge `PUT /api/v1/apps/:id/config` route with an authenticated administrative user session and the current Box configuration revision. Apps consume their settings through the read-only runtime endpoint. An app may store its own domain data in `/data`; use SQLite or files when appropriate, back up before migrations, and never inspect another app’s data.
+`401` means the install credential is invalid; `403` means the capability was not approved; `404` means an app document was not found; `413` means a storage/document limit was reached; `429` means the app should slow down; `502` means the underlying service is unavailable. Show a useful retry state and preserve unsaved input. Runtime requests are limited to 120 per minute and four simultaneous requests per app. PLC writes, device reconfiguration, shell access, database administration and organization mutations are not app runtime capabilities in v1.
+
+Prometheus queries are limited to 8,192 characters, a five-second evaluation timeout, a 4 MiB response, and 1,000 returned series. Range queries allow at most 31 days and 11,000 points with step >= 1 second; timestamps accept epoch seconds or ISO strings. Metric discovery returns at most 2,000 names. MongoDB allows 64 KiB per document, 10,000 documents, 32 collections and 128 MiB of data per app. Find returns 1–100 documents with skip up to 10,000 (at most approximately 6.4 MiB at the document-size limit). Queries have a two-second database deadline. The API supports scalar comparisons, `$in`/`$nin`, `$exists`, `$and` and `$or`, but rejects executable or arbitrary operators such as `$where`, `$regex`, `$expr`, and aggregation pipelines. See the cookbook for examples.
+
+App settings are edited through the existing Edge `PUT /api/v1/apps/:id/config` route with an authenticated administrative user session and the current Box configuration revision. Apps consume their settings through the read-only runtime endpoint. Store domain data in the app-isolated MongoDB store or `/data` as appropriate. MongoDB documents and `/data` survive app updates and ordinary uninstall; keep backups before migrations and never inspect another app’s data.
 
 ## Browser identity and proxy
 

@@ -42,6 +42,30 @@ test('release validation requires an ARM64 pinned artifact and safe capabilities
   assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, capabilities: ['admin'] } } }).length);
 });
 
+test('Mongo and metrics helpers expose easy scoped operations without database credentials', async () => {
+  const calls = [];
+  const client = createRuntimeClient({ baseUrl: 'http://fixture/runtime', token: 'app-credential', fetchImpl: async (url, options) => {
+    calls.push({ url, method: options.method, body: options.body ? JSON.parse(options.body) : null });
+    return { ok: true, json: async () => ({ ok: true }) };
+  } });
+  const notes = client.mongo.collection('notes');
+  await notes.insertOne({ title: 'Hello' });
+  await notes.find({ status: 'open' }, { limit: 10 });
+  await notes.replaceOne('document-id', { title: 'Updated' });
+  await notes.deleteOne('document-id');
+  await client.metrics.query('up');
+  await client.metrics.queryRange('up', { start: 1, end: 61, step: 10 });
+  await client.metrics.metricNames('plc_');
+  assert.equal(calls[0].url, 'http://fixture/runtime/mongodb/collections/notes/documents');
+  assert.deepEqual(calls[1].body, { filter: { status: 'open' }, limit: 10 });
+  assert.equal(calls[2].method, 'PUT');
+  assert.equal(calls[3].method, 'DELETE');
+  assert.equal(calls[3].body, null);
+  assert.deepEqual(calls[5].body, { query: 'up', start: 1, end: 61, step: 10 });
+  assert.match(calls[6].url, /metrics\?prefix=plc_$/);
+  assert.throws(() => client.mongo.collection('system.users'), /Invalid/);
+});
+
 test('scaffold produces a dependency-free app with working health and authenticated session', async (t) => {
   const destination = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'orenda-sdk-test-')), 'app');
   const result = spawnSync(process.execPath, [path.join(__dirname, '../bin/orenda-box-sdk.js'), 'create', destination], { encoding: 'utf8', windowsHide: true });

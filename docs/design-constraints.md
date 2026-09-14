@@ -18,7 +18,7 @@ Apps should feel like part of OrendaBox. The starter gives you a restrained gree
 - Validate Edge proxy identity for every protected request, including app API and WebSocket upgrades. Health endpoints must disclose only readiness. Map unknown roles to a conservative level.
 - User identity and the app runtime credential are different: a runtime token proves an installed app, not a person. Your app still enforces user authorization before domain mutations and exposing sensitive PLC data.
 - Keep secrets server-side. Redact tokens/passwords from errors and logs, use dependency updates, validate inputs, and avoid public port bindings, shell interpolation and arbitrary URL forwarding.
-- Use the scoped runtime facade for core Box services. Never mount the Docker socket, provision a parallel org config, pair directly with OrendaService, create publish rules, or distribute fleet credentials.
+- Use the scoped runtime facade for core Box services: existing PLC reads, Prometheus queries, and app-isolated MongoDB persistence. Never mount the Docker socket, provision a parallel org config/database/collector, pair directly with OrendaService, create publish rules, or distribute fleet credentials.
 - SDK UI runs in an opaque browser sandbox so third-party code cannot read Edge Console credentials. Use relative assets and module imports; keep persistent state on the app server. Browser cookies, localStorage, IndexedDB, service workers and embedded frames are unavailable. Do not log or share the temporary app-session launch URL.
 - Respect third-party software licenses and attribution. A reviewer needs a support route, a clear description of data access, and release notes that describe behavioral or permission changes.
 

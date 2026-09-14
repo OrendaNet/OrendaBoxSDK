@@ -28,7 +28,7 @@ The SDK uses the existing AppRepo catalog shape. Put the app runtime contract in
 | `containerPort` | Integer `1024..65535`. The Box allocates the host port; an app cannot select another service’s port. |
 | `healthPath` | Absolute HTTP path containing letters, digits, `/`, `_`, or `-`. Respond with 2xx once ready. Health contains no sensitive information and is the only anonymous starter endpoint. |
 | `ui.enabled` | `true` for a user-facing app, `false` for a background service. Headless apps are installed and managed without an Open button. |
-| `capabilities` | Array drawn from `config:read` and `plc:read`. Use an empty array when no Box service access is needed. |
+| `capabilities` | Array drawn from `config:read`, `plc:read`, `prometheus:read`, `mongodb:read`, and `mongodb:write`. Use an empty array when no Box service access is needed. Request MongoDB read and write for a typical app data store, or read alone for a viewer. |
 | `versions[].version` | A new semantic version for every release. |
 | `versions[].image` | Publicly pullable registry image pinned with `@sha256:<64 hex>`, or `digest` alongside the image reference. |
 | `versions[].architectures` | Include `arm64`; optionally `amd64` when that image was built. |
