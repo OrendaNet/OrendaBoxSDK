@@ -81,7 +81,7 @@ const { bytes } = await box.usb.write(selectedPrinterId, receipt);
 
 ## Internet and LAN connections
 
-Add `network:outbound` when the app needs an external HTTPS API or a network peripheral. Explain the destination and purpose in your app description. At installation the administrator can grant outbound Internet/LAN access; otherwise the app remains on an internal network. Keep credentials for external systems in the app's own protected configuration.
+Add `network:outbound` when the app needs an external HTTPS API or a network peripheral. Explain the destination and purpose in your app description. At installation the administrator can grant outbound Internet/LAN access; otherwise the app's network stays isolated from those destinations. Keep credentials for external systems in the app's own protected configuration.
 
 ```js
 if (!granted.has('network:outbound')) {
