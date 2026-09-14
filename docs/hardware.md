@@ -58,7 +58,7 @@ const bytes = Buffer.from(sample.dataBase64, 'base64');
 
 For a USB serial scanner configured to emit UTF-8 text, collect these bytes until the scanner's documented line terminator arrives, then process one barcode. Preserve incomplete records between reads, impose a maximum barcode length, and handle `bytes: 0` as no new data. HID raw devices return HID reports, not UTF-8 text; use a parser for that scanner's report format. Do not treat arbitrary binary reports as text.
 
-The initial broker supports selected `hidraw`, `ttyUSB`, `ttyACM`, and USB printer character devices. It does not expose all `/dev/input` events, raw libusb, storage devices, modems, or the entire USB bus. Serial baud rates are configured by the administrator on the selected grant. Unplugged or unsupported hardware should produce a visible retry/setup state. Physical scanner compatibility depends on its Linux interface and report format.
+The initial broker supports selected `hidraw`, `ttyUSB`, `ttyACM`, and USB printer character devices. It does not expose all `/dev/input` events, raw libusb, storage devices, or the entire USB bus. Serial baud rates are configured by the administrator on the selected grant. Unplugged or unsupported hardware should produce a visible retry/setup state. Physical scanner compatibility depends on its Linux interface and report format.
 
 ## USB printers
 
