@@ -1,0 +1,17 @@
+{
+  "id": "my-app",
+  "name": "My OrendaBox app",
+  "description": "Describe the problem this app solves for your customers.",
+  "category": "utilities",
+  "runtime": "compose",
+  "metadata": {
+    "orenda": {
+      "sdkVersion": "1",
+      "containerPort": 3101,
+      "healthPath": "/health",
+      "ui": { "enabled": true },
+      "capabilities": ["config:read"]
+    }
+  },
+  "versions": []
+}
