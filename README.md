@@ -93,4 +93,4 @@ npm test
 npm run validate
 ```
 
-Tests cover forged identity headers, scoped service calls, release validation, safe scaffolding, startup health and authenticated sessions. SDK v1 needs Edge Manager `0.2.36` and DevicePlatform `0.2.45` or newer. Each release must declare `minPlatformVersion: "0.2.45"` (or higher) so older images reject the installation safely.
+Tests cover forged identity headers, scoped service calls, release validation, safe scaffolding, startup health and authenticated sessions. SDK v1 needs Edge Manager `0.2.37` and DevicePlatform `0.2.45` or newer. Each release must declare `minPlatformVersion: "0.2.45"` (or higher) so older images reject the installation safely.
