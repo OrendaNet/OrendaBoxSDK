@@ -7,7 +7,7 @@ const { createRuntimeClient } = require('./sdk');
 const box = createRuntimeClient();
 ```
 
-Add the capabilities used below to `metadata.orenda.capabilities` in `orenda-app.json`, then request review. Existing installations gain new capabilities only through an approved app update. Use `box.context()` to inspect what is currently approved; do not hide a denied capability behind a generic connection error.
+Add the capabilities used below to `metadata.orenda.capabilities` in `orenda-app.json`, then request marketplace review. The Box administrator must also approve each grant when installing or updating. Use `box.context()` to inspect what was granted; do not hide a declined permission behind a generic connection error. These core APIs work without `network:outbound` because the Box provides them through its authenticated runtime facade.
 
 ## Read current PLC values
 

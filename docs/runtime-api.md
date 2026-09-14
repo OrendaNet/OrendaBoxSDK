@@ -25,7 +25,7 @@ Paths below are relative to `/api/v1/runtime`:
 
 | Method/path | Capability | Response |
 | --- | --- | --- |
-| `GET /context` | Installed app | `apiVersion`, `appId`, `appVersion`, `platformVersion`, approved `capabilities`, `dataDirectory`. |
+| `GET /context` | Installed app | `apiVersion`, `appId`, `appVersion`, `platformVersion`, currently granted `capabilities`, service availability, `dataDirectory`. |
 | `GET /config` | `config:read` | `{ appId, config }` containing only this app’s Edge-managed settings. |
 | `GET /plc/tags` | `plc:read` | Existing PLC collector `/api/tags` response. |
 | `POST /plc/read` | `plc:read` | Existing PLC collector `/api/read` response for `{ "tags": ["name"] }`. Between 1 and 100 tag names. |
@@ -38,10 +38,15 @@ Paths below are relative to `/api/v1/runtime`:
 | `POST /mongodb/collections/:name/documents` | `mongodb:write` | `{ document }` → `{ insertedId }`; Box-generated string UUID. |
 | `PUT /mongodb/collections/:name/documents/:id` | `mongodb:write` | `{ document }`; replaces this document while preserving its ID. |
 | `DELETE /mongodb/collections/:name/documents/:id` | `mongodb:write` | `{ deletedCount }`; deletes this one document. |
+| `GET /usb/devices` | USB grant | `{ devices }`; only this app's selected devices, with opaque `id`, `name`, `type`, `read`, `write`, and optional `baudRate`. |
+| `POST /usb/devices/:id/read` | `usb:read` and selected-device read grant | `{ maxBytes?, timeoutMs? }` → `{ dataBase64, bytes }`; at most 4,096 bytes and a 5,000 ms timeout. |
+| `POST /usb/devices/:id/write` | `usb:write` and selected-device write grant | `{ dataBase64 }` → `{ bytes }`; at most 65,536 decoded bytes. |
 
 The PLC routes delegate to OrendaPLCLibrary on the Box. They do not create a second collector or copy its config. `plc:read` grants read access to configured tags across the Box. `prometheus:read` reads the existing Box metrics database; it cannot reload Prometheus, change rules, or run administrative operations. MongoDB routes use the existing core database and derive a private database namespace exclusively from the installed app identity. An app cannot supply a database name, connect URI, pipeline, or command. No shared Mongo credentials are returned to the container.
 
-`401` means the install credential is invalid; `403` means the capability was not approved; `404` means an app document was not found; `413` means a storage/document limit was reached; `429` means the app should slow down; `502` means the underlying service is unavailable. Show a useful retry state and preserve unsaved input. Runtime requests are limited to 120 per minute and four simultaneous requests per app. PLC writes, device reconfiguration, shell access, database administration and organization mutations are not app runtime capabilities in v1.
+All permissions require explicit Box administrator consent at installation or update, in addition to marketplace review. Only the intersection of requested and granted capabilities is effective. USB also requires a selected-device grant; no runtime request can choose a host device path. `network:outbound` is a container network permission, and `display:present` permits the administrator to select this app for the host's local viewer. They do not introduce raw network-control or display-management API routes. See [hardware and networking](hardware.md).
+
+`401` means the install credential is invalid; `403` means the needed permission was not granted; `404` means an app document or selected resource was not found; `413` means a storage/document limit was reached; `429` means the app should slow down; `502` means the underlying service is unavailable. Show a useful retry state and preserve unsaved input. Runtime requests are limited to 120 per minute and four simultaneous requests per app. PLC writes, device reconfiguration, shell access, database administration and organization mutations are not app runtime capabilities in v1.
 
 Prometheus queries are limited to 8,192 characters, a five-second evaluation timeout, a 4 MiB response, and 1,000 returned series. Range queries allow at most 31 days and 11,000 points with step >= 1 second; timestamps accept epoch seconds or ISO strings. Metric discovery returns at most 2,000 names. MongoDB allows 64 KiB per document, 10,000 documents, 32 collections and 128 MiB of data per app. Find returns 1–100 documents with skip up to 10,000 (at most approximately 6.4 MiB at the document-size limit). Queries have a two-second database deadline. The API supports scalar comparisons, `$in`/`$nin`, `$exists`, `$and` and `$or`, but rejects executable or arbitrary operators such as `$where`, `$regex`, `$expr`, and aggregation pipelines. See the cookbook for examples.
 

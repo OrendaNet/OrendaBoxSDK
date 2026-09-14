@@ -54,10 +54,10 @@ The registry must allow Boxes to pull the image without publisher credentials. D
 2. Create an app with a clear description, category, support information, and the SDK runtime settings from `metadata.orenda` in your manifest. Your published app ID is namespaced to your publisher; the Box supplies the final ID in `ORENDA_APP_ID`.
 3. Add the release image, digest, version and supported architectures. Explain why you need each requested capability.
 4. Submit for administrator review. Drafts and pending submissions are not available to Box users. Address review feedback and resubmit when needed. Approved releases become available through the existing official catalog.
-5. A Box administrator chooses the app in Edge Console and installs it. Edge Console allocates a localhost port, starts the container, waits for `/health`, and registers launchable apps in the organization config. A failed update restores the previous managed compose configuration.
+5. A Box administrator chooses the app in Edge Console, reviews the release's requested permissions, selects grants and any USB devices, and explicitly approves installation. Network and hardware access start disabled. Edge Console allocates a localhost port, starts the container, waits for `/health`, and registers launchable apps in the organization config. A failed update restores the previous managed compose configuration.
 6. Grant access through the existing Box/organization access controls. App users also need access to Edge Console, because Connect opens apps through that authenticated proxy.
 
-An approval is for the submitted release and permissions. Changing a draft does not change the approved catalog. Updates go through review again.
+Marketplace approval is for the submitted release and permission requests. Changing a draft does not change the approved catalog. Updates go through marketplace review and a new Box installation consent step. Users can decline permissions; apps should show the affected feature as unavailable and explain the missing grant.
 
 ## Use Box services
 
@@ -82,7 +82,9 @@ const openNotes = await notes.find({ status: 'open' }, { limit: 20 });          
 
 Keep these helpers on your server. The browser calls your own authenticated app API; it never receives the runtime token or proxy secret. Check the user’s roles before performing app mutations. PLC and Prometheus read capabilities cover their data across the Box; MongoDB access is isolated to the app’s own database. No service URL, database setup, username or password is required in app code. Enable only the capabilities you use in `metadata.orenda.capabilities`, then submit them for review.
 
-See the [PLC, metrics and MongoDB cookbook](docs/core-services.md), [runtime APIs and ownership](docs/runtime-api.md), [manifest reference](docs/manifest.md), and [design and security constraints](docs/design-constraints.md). Existing services remain the source of their data; this SDK does not introduce another identity, organization, PLC, or database server.
+See the [PLC, metrics and MongoDB cookbook](docs/core-services.md), [USB barcode scanners, printers, networking and HDMI guide](docs/hardware.md), [runtime APIs and ownership](docs/runtime-api.md), [manifest reference](docs/manifest.md), and [design and security constraints](docs/design-constraints.md). Existing services remain the source of their data; this SDK does not introduce another identity, organization, PLC, or database server.
+
+Apps have no Internet or LAN access unless `network:outbound` is requested and granted at installation. Core service access uses the Edge runtime facade and its individual grants. USB access is limited to selected devices; HDMI uses the Box's existing authenticated app UI through a host-managed viewer. No host mounts, privileged containers, raw display sockets, or global USB access are required.
 
 ## Verify the SDK
 

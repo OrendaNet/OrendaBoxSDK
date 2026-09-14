@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync, spawn } = require('node:child_process');
 const { authenticateEdgeRequest, createRuntimeClient } = require('../lib');
-const { validateManifest } = require('../lib/manifest');
+const { validateManifest, CAPABILITIES } = require('../lib/manifest');
 
 test('identity requires the app proxy secret and never trusts browser roles alone', () => {
   const headers = { 'x-orenda-auth-source': 'org-config', 'x-orenda-username': 'sam', 'x-orenda-user-roles': 'viewer' };
@@ -64,6 +64,39 @@ test('Mongo and metrics helpers expose easy scoped operations without database c
   assert.deepEqual(calls[5].body, { query: 'up', start: 1, end: 61, step: 10 });
   assert.match(calls[6].url, /metrics\?prefix=plc_$/);
   assert.throws(() => client.mongo.collection('system.users'), /Invalid/);
+});
+
+test('USB helpers use selected opaque device ids and preserve binary data with bounded requests', async () => {
+  const calls = [];
+  const client = createRuntimeClient({ baseUrl: 'http://fixture/runtime', token: 'app-credential', fetchImpl: async (url, options) => {
+    calls.push({ url, method: options.method, body: options.body ? JSON.parse(options.body) : null });
+    return { ok: true, json: async () => ({ bytes: 2 }) };
+  } });
+  const id = 'usb-' + 'a'.repeat(32);
+  await client.usb.devices();
+  await client.usb.read(id, { maxBytes: 64, timeoutMs: 2500 });
+  const buffer = Uint8Array.from([0xff, 0x1b, 0x40, 0xee]);
+  await client.usb.write(id, buffer.subarray(1, 3));
+  await client.usb.write(id, Buffer.from([0, 255]));
+  assert.equal(calls[0].url, 'http://fixture/runtime/usb/devices');
+  assert.deepEqual(calls[1].body, { maxBytes: 64, timeoutMs: 2500 });
+  assert.equal(calls[2].method, 'POST');
+  assert.deepEqual(Buffer.from(calls[2].body.dataBase64, 'base64'), Buffer.from([0x1b, 0x40]));
+  assert.deepEqual(Buffer.from(calls[3].body.dataBase64, 'base64'), Buffer.from([0, 255]));
+  for (const id of ['/dev/ttyUSB0', '../other-app', '']) assert.throws(() => client.usb.read(id), /device id/);
+  for (const options of [{ maxBytes: 4097 }, { maxBytes: 0 }, { timeoutMs: 5001 }, { timeoutMs: true }]) assert.throws(() => client.usb.read('usb-' + 'a'.repeat(32), options), /reads require/);
+  for (const bytes of ['printer text', new Uint8Array(0), new Uint8Array(65537)]) assert.throws(() => client.usb.write(id, bytes), /writes require/);
+  assert.equal(calls.length, 4, 'Invalid device paths and payloads never leave the app');
+});
+
+test('manifest permits the nine reviewed capabilities and keeps the starter network and hardware permissions minimal', () => {
+  const starter = structuredClone(require('../templates/node-app/orenda-app.json'));
+  assert.equal(CAPABILITIES.length, 9);
+  assert.ok(!starter.metadata.orenda.capabilities.some((capability) => ['network:outbound', 'display:present', 'usb:read', 'usb:write'].includes(capability)));
+  starter.metadata.orenda.capabilities = [...CAPABILITIES];
+  assert.deepEqual(validateManifest(starter), []);
+  starter.metadata.orenda.capabilities.push('usb:raw');
+  assert.ok(validateManifest(starter).some((error) => error.startsWith('capabilities')));
 });
 
 test('scaffold produces a dependency-free app with working health and authenticated session', async (t) => {
