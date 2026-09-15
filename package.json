@@ -1,9 +1,9 @@
 {
   "name": "@orenda/box-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Develop, validate and package apps for OrendaBox and Edge Console",
   "license": "MIT",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=20.3" },
   "main": "lib/index.js",
   "bin": { "orenda-box-sdk": "bin/orenda-box-sdk.js" },
   "scripts": { "test": "node --test test/*.test.js", "validate": "node bin/orenda-box-sdk.js validate templates/node-app/orenda-app.json" },

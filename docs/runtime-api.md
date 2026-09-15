@@ -41,6 +41,7 @@ Paths below are relative to `/api/v1/runtime`:
 | `GET /usb/devices` | USB grant | `{ devices }`; only this app's selected devices, with opaque `id`, `name`, `type`, `read`, `write`, and optional `baudRate`. |
 | `POST /usb/devices/:id/read` | `usb:read` and selected-device read grant | `{ maxBytes?, timeoutMs? }` → `{ dataBase64, bytes, reports? }`; at most 4,096 bytes and a 5,000 ms timeout. HID `reports` preserves complete report boundaries in base64. |
 | `POST /usb/devices/:id/write` | `usb:write` and selected-device write grant | `{ dataBase64 }` → `{ bytes }`; at most 65,536 decoded bytes. |
+| `GET /usb/devices/:id/camera/stream` | SDK `1.1`, `usb:read`, selected camera read grant | Multipart JPEG stream; optional `width`, `height`, `fps`. `cameraStream()` returns `{ body, contentType }` and accepts an abort signal. See [camera bounds and forwarding](hardware.md#usb-cameras). |
 
 The PLC routes delegate to OrendaPLCLibrary on the Box. They do not create a second collector or copy its config. `plc:read` grants read access to configured tags across the Box. `prometheus:read` reads the existing Box metrics database; it cannot reload Prometheus, change rules, or run administrative operations. MongoDB routes use the existing core database and derive a private database namespace exclusively from the installed app identity. An app cannot supply a database name, connect URI, pipeline, or command. No shared Mongo credentials are returned to the container.
 

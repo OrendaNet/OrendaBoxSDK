@@ -11,6 +11,31 @@ const granted = new Set(context.capabilities);
 
 The manifest is a permission request. `context.capabilities` is the effective grant. A feature can be declined without granting the app a different route to the same resource. Explain unavailable features, preserve entered data, and avoid repeated automatic permission prompts.
 
+## USB cameras
+
+Use SDK `1.1`, Edge Manager `0.2.39+` and Platform `0.2.46+` for camera apps. Set the app manifest's `metadata.orenda.sdkVersion` to `"1.1"`, request only `usb:read`, and declare `minPlatformVersion: "0.2.46"` on the new release. The Box administrator must select the camera and approve read access. Camera video is a separate interface from the camera's microphone; audio is not captured.
+
+`box.usb.devices()` returns only granted devices. Filter for `type === 'camera'`; device ids remain stable when Linux renumbers `/dev/videoN`. A camera without a serial number is tied to its physical USB port. Moving it to another port requires a fresh selection. Never ask the user to type a host device path.
+
+Inside an app-server endpoint already authenticated with `requireEdgeUser`, forward the stream:
+
+```js
+const { Readable } = require('node:stream');
+const cancellation = new AbortController();
+res.once('close', () => cancellation.abort());
+const { body, contentType } = await box.usb.cameraStream(selectedCameraId, {
+  width: 640, height: 480, fps: 10, signal: cancellation.signal
+});
+res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-store' });
+Readable.fromWeb(body).on('error', () => res.destroy()).pipe(res);
+```
+
+Display that authenticated endpoint with an ordinary `<img src="api/camera/stream">`. Catch startup errors before sending headers and show a retry/setup state. `services.usb.camera` in `box.context()` identifies the camera API; `services.usb.read` reports the capability grant. Keep tokens on the app server. Multiple browser viewers should share one upstream capture and disconnect slow viewers instead of accumulating frames.
+
+The broker supports USB V4L2 single-planar MJPEG capture at `320x240`, `640x480` or `1280x720`, with output limited to `1..15` frames per second; defaults are `640x480` and `10` fps. The camera must accept the chosen MJPEG resolution. Unsupported modes return `422`, a busy camera/app returns `409`, and unplugged hardware returns `503`. There is at most one capture per app/device and two captures per Box. Each camera buffer is bounded to 2 MiB. Client cancellation, token revocation or removal of the selected-device read grant stops capture; frames already delivered to an app cannot be recalled.
+
+The host owns capture using the existing Python 3 runtime and a checked, inherited descriptor. Apps receive JPEG bytes; no camera pathname, privileged container, camera driver ioctl, audio interface, recording service, FFmpeg dependency or additional daemon is exposed. Compatibility with a specific physical camera still requires testing its negotiated format and unplug/reconnect behavior on the Box.
+
 ## Barcode scanners
 
 A USB scanner in keyboard mode sends keystrokes to the focused input. For an operator using the app in a browser, start with an ordinary labelled input and a submit handler:

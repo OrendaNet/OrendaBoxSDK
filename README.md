@@ -4,7 +4,7 @@ Build an app, use the Box services you need, and distribute reviewed releases th
 
 ## Start in five minutes
 
-Install Node.js 20 or newer, then:
+Install Node.js 20.3 or newer, then:
 
 ```sh
 git clone https://github.com/OrendaNet/OrendaBoxSDK.git
