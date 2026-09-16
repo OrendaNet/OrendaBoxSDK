@@ -125,7 +125,7 @@ Use normal Node.js networking with timeouts after consent. A network printer use
 
 ## Run a WiFi hotspot
 
-Use SDK `1.2`, Edge Manager `0.2.44+` and Platform `0.2.52+` for hotspot apps. Set `metadata.orenda.sdkVersion` to `"1.2"`, request only `hotspot:manage`, and declare `minPlatformVersion: "0.2.52"` on the new release. The Box administrator approves the grant at installation or update.
+Use SDK `1.2`, Edge Manager `0.2.45+` and Platform `0.2.52+` for hotspot apps. Set `metadata.orenda.sdkVersion` to `"1.2"`, request only `hotspot:manage`, and declare `minPlatformVersion: "0.2.52"` on the new release. The Box administrator approves the grant at installation or update.
 
 ```js
 const status = await box.hotspot.status();
