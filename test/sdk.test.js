@@ -89,14 +89,47 @@ test('USB helpers use selected opaque device ids and preserve binary data with b
   assert.equal(calls.length, 4, 'Invalid device paths and payloads never leave the app');
 });
 
-test('manifest permits the nine reviewed capabilities and keeps the starter network and hardware permissions minimal', () => {
+test('manifest permits the ten reviewed capabilities and keeps the starter network and hardware permissions minimal', () => {
   const starter = structuredClone(require('../templates/node-app/orenda-app.json'));
-  assert.equal(CAPABILITIES.length, 9);
-  assert.ok(!starter.metadata.orenda.capabilities.some((capability) => ['network:outbound', 'display:present', 'usb:read', 'usb:write'].includes(capability)));
+  assert.equal(CAPABILITIES.length, 10);
+  assert.ok(!starter.metadata.orenda.capabilities.some((capability) => ['network:outbound', 'display:present', 'usb:read', 'usb:write', 'hotspot:manage'].includes(capability)));
+  starter.metadata.orenda.sdkVersion = '1.2';
   starter.metadata.orenda.capabilities = [...CAPABILITIES];
   assert.deepEqual(validateManifest(starter), []);
   starter.metadata.orenda.capabilities.push('usb:raw');
   assert.ok(validateManifest(starter).some((error) => error.startsWith('capabilities')));
+});
+
+test('hotspot management requires SDK 1.2 while older contracts remain valid', () => {
+  const starter = structuredClone(require('../templates/node-app/orenda-app.json'));
+  const manifest = { ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.2', capabilities: ['hotspot:manage'] } } };
+  assert.deepEqual(validateManifest(manifest), []);
+  assert.ok(validateManifest({ ...manifest, metadata: { orenda: { ...manifest.metadata.orenda, sdkVersion: '1.1' } } }).some((error) => error.includes('sdkVersion "1.2"')));
+  assert.ok(validateManifest({ ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.3' } } }).some((error) => error.includes('sdkVersion')));
+});
+
+test('hotspot helper validates settings and uses scoped runtime routes', async () => {
+  const calls = [];
+  const client = createRuntimeClient({ baseUrl: 'http://fixture/runtime', token: 'app-credential', fetchImpl: async (url, options) => {
+    calls.push({ url, method: options.method, body: options.body ? JSON.parse(options.body) : null });
+    return { ok: true, json: async () => ({ active: true }) };
+  } });
+  await client.hotspot.status();
+  await client.hotspot.configure({ ssid: 'OrendaBox Line 4', password: 'guest-password', internetAccess: false });
+  await client.hotspot.configure({ internetAccess: true });
+  await client.hotspot.start();
+  await client.hotspot.stop();
+  assert.equal(calls[0].url, 'http://fixture/runtime/hotspot');
+  assert.equal(calls[1].method, 'PUT');
+  assert.deepEqual(calls[1].body, { ssid: 'OrendaBox Line 4', password: 'guest-password', internetAccess: false });
+  assert.deepEqual(calls[2].body, { internetAccess: true });
+  assert.equal(calls[3].method, 'POST');
+  assert.equal(calls[3].url, 'http://fixture/runtime/hotspot/start');
+  assert.equal(calls[4].url, 'http://fixture/runtime/hotspot/stop');
+  for (const settings of [null, {}, { ssid: '' }, { ssid: 'x'.repeat(33) }, { ssid: 'Orenda', password: 'short' }, { ssid: 'Orenda', internetAccess: 'yes' }, { ssid: 'Orenda', extra: true }]) {
+    assert.throws(() => client.hotspot.configure(settings), /hotspot|WiFi|internetAccess/i);
+  }
+  assert.equal(calls.length, 5, 'invalid settings never leave the app');
 });
 
 test('scaffold produces a dependency-free app with working health and authenticated session', async (t) => {

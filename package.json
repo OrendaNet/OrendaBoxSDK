@@ -1,6 +1,6 @@
 {
   "name": "@orenda/box-sdk",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Develop, validate and package apps for OrendaBox and Edge Console",
   "license": "MIT",
   "engines": { "node": ">=20.3" },

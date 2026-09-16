@@ -123,6 +123,24 @@ if (!granted.has('network:outbound')) {
 
 Use normal Node.js networking with timeouts after consent. A network printer uses its vendor's documented protocol over the granted LAN connection. Core PLC, Prometheus and MongoDB APIs remain available through the runtime client with their own grants and do not require outbound networking. The Box continues to protect its host services even when outbound access is granted.
 
+## Run a WiFi hotspot
+
+Use SDK `1.2`, Edge Manager `0.2.44+` and Platform `0.2.52+` for hotspot apps. Set `metadata.orenda.sdkVersion` to `"1.2"`, request only `hotspot:manage`, and declare `minPlatformVersion: "0.2.52"` on the new release. The Box administrator approves the grant at installation or update.
+
+```js
+const status = await box.hotspot.status();
+const configured = await box.hotspot.configure({
+  ssid: 'OrendaBox Line 4',
+  password: 'shift-handover-2026',
+  internetAccess: false
+});
+if (!configured.active) await box.hotspot.start();
+// Nearby devices join the WiFi network and open configured.portalUrl,
+// for example http://10.42.0.1/, to reach Box-hosted web apps.
+```
+
+The Box owns the access point through NetworkManager. It chooses a WiFi adapter that is not the active uplink, creates the AP profile, runs DHCP/DNS, and decides forwarding. `internetAccess: true` shares the Box uplink through NetworkManager shared mode; `false` keeps DHCP and Box-hosted web apps reachable while dropping forwarded traffic. If the only WiFi adapter is the uplink, start fails with a clear error — use Ethernet as the uplink for hotspot deployments. The stored password is write-only: `status()` never returns it, and `configure()` with an empty password keeps the current one. Apps never receive interface names, host paths, iptables rules, or the ability to run host commands.
+
 ## Show an app on the Box's HDMI display
 
 For a user-facing app, set `ui.enabled: true` and request `display:present`. After consent, the administrator can select the app for the Box's local display. Render the same responsive HTML UI used in Edge Console. Use relative assets/API URLs and support touch, keyboard, visible focus and the intended display resolution.

@@ -24,7 +24,7 @@ The SDK uses the existing AppRepo catalog shape. Put the app runtime contract in
 | --- | --- |
 | `id` | 2–120 lowercase letters, digits, hyphens; starts with a letter/digit. The publisher service assigns the final namespace. |
 | `runtime` | `compose` for SDK v1. Existing first-party systemd apps are unchanged. |
-| `sdkVersion` | String `"1"` for existing services, or `"1.1"` for USB camera capture (Edge Manager `0.2.39+`). Older Edge versions reject `1.1` before installation. |
+| `sdkVersion` | String `"1"` for existing services, `"1.1"` for USB camera capture (Edge Manager `0.2.39+`), or `"1.2"` for WiFi hotspot management (Edge Manager `0.2.44+`). Older Edge versions reject newer contracts before installation. |
 | `containerPort` | Integer `1024..65535`. The Box allocates the host port; an app cannot select another service’s port. |
 | `healthPath` | Absolute HTTP path containing letters, digits, `/`, `_`, or `-`. Respond with 2xx once ready. Health contains no sensitive information and is the only anonymous starter endpoint. |
 | `ui.enabled` | `true` for a user-facing app, `false` for a background service. Headless apps are installed and managed without an Open button. |
@@ -51,6 +51,7 @@ Resource constraints are managed by the Box: a private compose project/network, 
 | `usb:write` | Write bytes to USB devices explicitly selected for this app. |
 | `display:present` | Allow the administrator to select this app's UI for the Box's local HDMI display. |
 | `network:outbound` | Outbound Internet and LAN connections from the app container. |
+| `hotspot:manage` | Create, configure and start a WiFi hotspot that nearby devices can join. Requires SDK `1.2`. The Box owns the access point and its internet-sharing policy. |
 
 Edge Console presents these permissions before installing or updating. The administrator explicitly acknowledges the current release and selects its grants, including individual USB devices and read/write access. Consent is bound to the app's current release and manifest; changing either requires a new review. An app cannot approve itself or gain permissions just by changing its image. Request only what the feature needs and handle declined permissions with a clear explanation. `context().capabilities` reports the currently granted permissions, which can be fewer than those requested.
 
