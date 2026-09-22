@@ -125,7 +125,7 @@ Use normal Node.js networking with timeouts after consent. A network printer use
 
 ## Run a WiFi hotspot
 
-Use SDK `1.2`, Edge Manager `0.2.45+` and Platform `0.2.53+` for hotspot apps. Set `metadata.orenda.sdkVersion` to `"1.2"`, request only `hotspot:manage`, and declare `minPlatformVersion: "0.2.53"` on the new release. The Box administrator approves the grant at installation or update.
+Use SDK `1.2`, Edge Manager `0.2.45+` and Platform `0.2.53+` for hotspot apps. Set `metadata.orenda.sdkVersion` to `"1.2"`, request only `hotspot:manage`, and declare `minPlatformVersion: "0.2.53"` on the new release. The Box administrator approves the grant at installation or update. Releasing a WiFi uplink (`disconnectUplink()`) needs Edge Manager `0.2.48+`.
 
 ```js
 const status = await box.hotspot.status();
@@ -134,12 +134,19 @@ const configured = await box.hotspot.configure({
   password: 'shift-handover-2026',
   internetAccess: false
 });
-if (!configured.active) await box.hotspot.start();
-// Nearby devices join the WiFi network and open configured.portalUrl,
-// for example http://10.42.0.1/, to reach Box-hosted web apps.
+if (!configured.active) {
+  // Optional, explicit operator action: if WiFi is the Box uplink and another
+  // uplink exists, free the radio before starting the access point.
+  if (status.uplink?.wifiConnected && status.uplink?.canReleaseWifi) await box.hotspot.disconnectUplink();
+  await box.hotspot.start();
+}
+// Nearby devices first open configured.portalSetupUrl over HTTP to install
+// this Box's public local CA, then use configured.portalUrl (normally
+// the Box-specific https://apps-<20 hex>.orenda.home.arpa/ origin) as an
+// offline-capable secure PWA. The shared HTTP name is setup/discovery only.
 ```
 
-The Box owns the access point through NetworkManager. It chooses a WiFi adapter that is not the active uplink, creates the AP profile, runs DHCP/DNS, and decides forwarding. `internetAccess: true` shares the Box uplink through NetworkManager shared mode; `false` keeps DHCP and Box-hosted web apps reachable while dropping forwarded traffic. If the only WiFi adapter is the uplink, start fails with a clear error — use Ethernet as the uplink for hotspot deployments. The stored password is write-only: `status()` never returns it, and `configure()` with an empty password keeps the current one. Apps never receive interface names, host paths, iptables rules, or the ability to run host commands.
+The Box owns the access point through NetworkManager. It chooses a WiFi adapter that is not the active uplink, creates the AP profile on a pinned allowed channel, runs DHCP/DNS, and decides forwarding. `internetAccess: true` shares the Box uplink through NetworkManager shared mode; `false` keeps DHCP and Box-hosted web apps reachable while dropping forwarded traffic. If the only WiFi adapter is the uplink, start fails with a clear error — the operator can release that uplink through `disconnectUplink()`, which the Box refuses unless Ethernet or mobile broadband will keep it reachable. The stored password is write-only: `status()` never returns it, and `configure()` with an empty password keeps the current one. Apps never receive interface names, host paths, iptables rules, or the ability to run host commands.
 
 ## Show an app on the Box's HDMI display
 
