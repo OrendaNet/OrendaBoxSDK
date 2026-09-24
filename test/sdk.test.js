@@ -117,6 +117,7 @@ test('hotspot helper validates settings and uses scoped runtime routes', async (
   await client.hotspot.status();
   await client.hotspot.configure({ ssid: 'OrendaBox Line 4', password: 'guest-password', internetAccess: false });
   await client.hotspot.configure({ internetAccess: true });
+  await client.hotspot.configure({ autoStart: true });
   await client.hotspot.start();
   await client.hotspot.stop();
   await client.hotspot.disconnectUplink();
@@ -124,15 +125,16 @@ test('hotspot helper validates settings and uses scoped runtime routes', async (
   assert.equal(calls[1].method, 'PUT');
   assert.deepEqual(calls[1].body, { ssid: 'OrendaBox Line 4', password: 'guest-password', internetAccess: false });
   assert.deepEqual(calls[2].body, { internetAccess: true });
-  assert.equal(calls[3].method, 'POST');
-  assert.equal(calls[3].url, 'http://fixture/runtime/hotspot/start');
-  assert.equal(calls[4].url, 'http://fixture/runtime/hotspot/stop');
-  assert.equal(calls[5].method, 'POST');
-  assert.equal(calls[5].url, 'http://fixture/runtime/hotspot/uplink/disconnect');
-  for (const settings of [null, {}, { ssid: '' }, { ssid: 'x'.repeat(33) }, { ssid: 'Orenda', password: 'short' }, { ssid: 'Orenda', internetAccess: 'yes' }, { ssid: 'Orenda', extra: true }]) {
+  assert.deepEqual(calls[3].body, { autoStart: true });
+  assert.equal(calls[4].method, 'POST');
+  assert.equal(calls[4].url, 'http://fixture/runtime/hotspot/start');
+  assert.equal(calls[5].url, 'http://fixture/runtime/hotspot/stop');
+  assert.equal(calls[6].method, 'POST');
+  assert.equal(calls[6].url, 'http://fixture/runtime/hotspot/uplink/disconnect');
+  for (const settings of [null, {}, { ssid: '' }, { ssid: 'x'.repeat(33) }, { ssid: 'Orenda', password: 'short' }, { ssid: 'Orenda', internetAccess: 'yes' }, { autoStart: 'yes' }, { ssid: 'Orenda', extra: true }]) {
     assert.throws(() => client.hotspot.configure(settings), /hotspot|WiFi|internetAccess/i);
   }
-  assert.equal(calls.length, 6, 'invalid settings never leave the app');
+  assert.equal(calls.length, 7, 'invalid settings never leave the app');
 });
 
 test('scaffold produces a dependency-free app with working health and authenticated session', async (t) => {

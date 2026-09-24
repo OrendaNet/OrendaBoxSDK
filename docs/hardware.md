@@ -127,6 +127,8 @@ Use normal Node.js networking with timeouts after consent. A network printer use
 
 Use SDK `1.2`, Edge Manager `0.2.45+` and Platform `0.2.53+` for hotspot apps. Set `metadata.orenda.sdkVersion` to `"1.2"`, request only `hotspot:manage`, and declare `minPlatformVersion: "0.2.53"` on the new release. The Box administrator approves the grant at installation or update. Releasing a WiFi uplink (`disconnectUplink()`) needs Edge Manager `0.2.48+`.
 
+Edge Manager `0.2.52+` also accepts `configure({ autoStart: true })`. This is a persistent operator preference, separate from starting or stopping the access point now. On boot, Edge keeps a connected WiFi uplink until a separate Ethernet or mobile default route is ready, then frees the radio and starts the hotspot. If that route is unavailable, it retries without stranding the Box; the managed AP profile itself must remain `autoconnect=no` so Edge installs its firewall boundary before activation.
+
 ```js
 const status = await box.hotspot.status();
 const configured = await box.hotspot.configure({
