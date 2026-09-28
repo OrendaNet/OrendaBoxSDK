@@ -121,5 +121,5 @@ network or runtime keys. All parsers/OCR/analysis dependencies must be built int
 the image. The host artifact API enforces its declared quota; the controller’s
 legacy persistent `/data` volume is not a filesystem-wide quota boundary.
 
-See the Edge Manager [runtime contract](../OrendaEdgeManager/docs/runtime-v2.md)
+See the Edge Manager [runtime contract](https://github.com/OrendaNet/OrendaEdgeManager/blob/main/docs/runtime-v2.md)
 for the HTTP routes, supported PromQL subset and first-party enrollment.
