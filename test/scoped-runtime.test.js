@@ -2,6 +2,15 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const { verifyServiceInvocation, createRuntimeClient } = require('../lib');
+const { validateManifest } = require('../lib/manifest');
+test('SDK 2 release requires the Platform version that packages its first-party credentials and runtime', () => {
+  const manifest = structuredClone(require('../templates/node-app/orenda-app.json'));
+  Object.assign(manifest.metadata.orenda, { sdkVersion: '2', capabilities: [], scopes: {}, workers: [] });
+  manifest.versions = [{ version: '1.0.0', minPlatformVersion: '0.2.66', architectures: ['arm64'], image: 'registry.example/app@sha256:' + 'a'.repeat(64) }];
+  assert.ok(validateManifest(manifest, { release: true }).some((error) => error.includes('at least 0.2.67')));
+  manifest.versions[0].minPlatformVersion = '0.2.67';
+  assert.deepEqual(validateManifest(manifest, { release: true }), []);
+});
 test('service identity validates audience, raw body binding and expiry', () => {
   const secret = 'a'.repeat(64); const now = Date.now(); const rawBody = Buffer.from('{"a":1}');
   const ctx = Buffer.from(JSON.stringify({ sourceAppId: 'orenda-mes', targetAppId: 'orenda-ai-agent', operation: 'jobs.create', actorId: 'user', orgAddress: '0x' + 'b'.repeat(40), machineIds: ['m1'], expiresAt: now + 30000 })).toString('base64url');

@@ -98,6 +98,9 @@ npm run validate
 Tests cover forged identity headers, scoped service calls, release validation, safe scaffolding, startup health and authenticated sessions. SDK v1 needs Edge Manager `0.2.37` and DevicePlatform `0.2.45` or newer. Each release must declare `minPlatformVersion: "0.2.45"` (or higher) so older images reject the installation safely.
 # SDK 2 scoped AI services
 
+SDK 2 requires Edge Manager `0.2.57` and DevicePlatform `0.2.67` or newer.
+Release manifests must declare `minPlatformVersion: "0.2.67"` or higher.
+
 SDK 2 adds `data:read`, `documents:read`, `documents:process`, `ai:invoke`,
 `app:invoke`, `jobs:run`, `storage:artifacts` and `compute:python`. Each requires a
 scope object validated by `lib/scopes.js`. Manifests may leave machine/device/tag
