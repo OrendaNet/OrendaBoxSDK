@@ -96,3 +96,27 @@ npm run validate
 ```
 
 Tests cover forged identity headers, scoped service calls, release validation, safe scaffolding, startup health and authenticated sessions. SDK v1 needs Edge Manager `0.2.37` and DevicePlatform `0.2.45` or newer. Each release must declare `minPlatformVersion: "0.2.45"` (or higher) so older images reject the installation safely.
+# SDK 2 scoped AI services
+
+SDK 2 adds `data:read`, `documents:read`, `documents:process`, `ai:invoke`,
+`app:invoke`, `jobs:run`, `storage:artifacts` and `compute:python`. Each requires a
+scope object validated by `lib/scopes.js`. Manifests may leave machine/device/tag
+selection arrays empty for administrator selection at install; grants always
+use explicit IDs. SDK 2 never permits `network:outbound`.
+
+The runtime client exposes `invokeApp`, `jobs.grant/renewSchedule/revoke`,
+`inference.invoke/status/cancel/settings/configure/heartbeat`, `workers.run`,
+`artifacts.put/read/delete` and delegated `data` helpers. Keep tokens and
+`invocationDelegation(req.headers)` server-side. Use
+`verifyServiceInvocation(req)` for owner endpoints and capture the raw JSON body
+before parsing; method, path, audience, body and expiry are authenticated.
+`ORENDA_APP_SERVICE_SECRET` is a target-specific credential distinct from the UI
+proxy secret. Core owners must also enforce machine ACLs and named operations.
+
+Workers use fixed manifest commands in the installed immutable image, with no
+network or runtime keys. All parsers/OCR/analysis dependencies must be built into
+the image. The host artifact API enforces its declared quota; the controller’s
+legacy persistent `/data` volume is not a filesystem-wide quota boundary.
+
+See the Edge Manager [runtime contract](../OrendaEdgeManager/docs/runtime-v2.md)
+for the HTTP routes, supported PromQL subset and first-party enrollment.
