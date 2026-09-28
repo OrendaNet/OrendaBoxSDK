@@ -89,12 +89,12 @@ test('USB helpers use selected opaque device ids and preserve binary data with b
   assert.equal(calls.length, 4, 'Invalid device paths and payloads never leave the app');
 });
 
-test('manifest permits the ten reviewed capabilities and keeps the starter network and hardware permissions minimal', () => {
+test('manifest preserves the ten legacy capabilities and gates new scoped capabilities behind SDK 2', () => {
   const starter = structuredClone(require('../templates/node-app/orenda-app.json'));
-  assert.equal(CAPABILITIES.length, 10);
+  assert.equal(CAPABILITIES.length, 18);
   assert.ok(!starter.metadata.orenda.capabilities.some((capability) => ['network:outbound', 'display:present', 'usb:read', 'usb:write', 'hotspot:manage'].includes(capability)));
   starter.metadata.orenda.sdkVersion = '1.2';
-  starter.metadata.orenda.capabilities = [...CAPABILITIES];
+  starter.metadata.orenda.capabilities = CAPABILITIES.slice(0, 10);
   assert.deepEqual(validateManifest(starter), []);
   starter.metadata.orenda.capabilities.push('usb:raw');
   assert.ok(validateManifest(starter).some((error) => error.startsWith('capabilities')));

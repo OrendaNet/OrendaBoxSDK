@@ -33,6 +33,6 @@ test('camera client surfaces declined grants and rejects a non-stream response',
 test('SDK1.1 is accepted without changing existing SDK1 manifests', () => {
   const manifest = structuredClone(require('../templates/node-app/orenda-app.json'));
   for (const version of ['1', '1.1']) { manifest.metadata.orenda.sdkVersion = version; assert.deepEqual(validateManifest(manifest), []); }
-  manifest.metadata.orenda.sdkVersion = '2';
+  manifest.metadata.orenda.sdkVersion = '3';
   assert.ok(validateManifest(manifest).some(error => error.includes('sdkVersion')));
 });
