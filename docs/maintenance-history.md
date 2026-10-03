@@ -121,6 +121,14 @@ opaque returned `nextCursor` back as `cursor`. Pages sort by source work date an
 ID, with independent source watermarks; they are not a cross-source snapshot.
 Denied modules never appear. A timeout returns an error, not partial totals.
 
+To inspect an older repair directly, supply `recordIds` from a retained
+`replacementEpochs[].id` or source page with `view: 'events'` and its dataset.
+Select 1–20 unique IDs fitting the page limit, without a cursor. The owner
+intersects IDs with the current delegated machine scope and source permissions;
+IDs never grant access to another asset. The response contains current source
+revisions. This avoids paging years of unrelated events to read one repair's
+parts and reported outcome.
+
 Only completed explicitly replaced parts and calibrations establish comparison
 boundaries. Native `spare_parts_used` does not prove replacement. Until an
 approved sensor-to-component mapping exists, condition analysis conservatively
