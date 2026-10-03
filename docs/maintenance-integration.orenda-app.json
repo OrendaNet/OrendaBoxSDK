@@ -1,0 +1,20 @@
+{
+  "id": "maintenance-integration-example",
+  "name": "Maintenance integration example",
+  "description": "Draft contract example for a customer ERP history adapter; not a published connector.",
+  "runtime": "compose",
+  "metadata": {
+    "orenda": {
+      "sdkVersion": "2",
+      "containerPort": 3101,
+      "healthPath": "/health",
+      "ui": { "enabled": true },
+      "capabilities": ["app:invoke"],
+      "scopes": {
+        "data": { "machineIds": [], "maxWindowSeconds": 2678400, "maxRows": 100, "maxBytes": 1048576 },
+        "apps": { "targets": [{ "appId": "orenda-mes", "operations": ["maintenance.history.read", "maintenance.history.import"] }] }
+      }
+    }
+  },
+  "versions": []
+}

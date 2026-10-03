@@ -123,3 +123,10 @@ legacy persistent `/data` volume is not a filesystem-wide quota boundary.
 
 See the Edge Manager [runtime contract](https://github.com/OrendaNet/OrendaEdgeManager/blob/main/docs/runtime-v2.md)
 for the HTTP routes, supported PromQL subset and first-party enrollment.
+
+Customer ERP/CMMS adapters use the [maintenance history v1 contract](docs/maintenance-history.md)
+and exported `maintenanceHistorySchema`. `runtime.maintenance.history` reads
+compact all-retained machine history; `runtime.maintenance.importHistory` submits
+typed, revisioned work and part-change records through independent approved MES
+operations. The guide includes machine mapping, conflict/retry rules, network
+boundaries and a draft integration manifest.
