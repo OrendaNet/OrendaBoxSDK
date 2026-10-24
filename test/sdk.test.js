@@ -91,7 +91,7 @@ test('USB helpers use selected opaque device ids and preserve binary data with b
 
 test('manifest preserves the ten legacy capabilities and gates new scoped capabilities behind SDK 2', () => {
   const starter = structuredClone(require('../templates/node-app/orenda-app.json'));
-  assert.equal(CAPABILITIES.length, 18);
+  assert.equal(CAPABILITIES.length, 19);
   assert.ok(!starter.metadata.orenda.capabilities.some((capability) => ['network:outbound', 'display:present', 'usb:read', 'usb:write', 'hotspot:manage'].includes(capability)));
   starter.metadata.orenda.sdkVersion = '1.2';
   starter.metadata.orenda.capabilities = CAPABILITIES.slice(0, 10);

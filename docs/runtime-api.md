@@ -4,6 +4,18 @@ The core app API is part of Edge Manager, which is already installed and managed
 
 ## App credentials
 
+### SDK 2 scoped operator writes (SCADA candidate)
+
+The coordinated SCADA Studio candidate adds `plc:write` to **SDK 2 only**. It is not a legacy runtime permission. Edge Manager, the PLC collector and the catalog capability validator must all include the matching release before an app requests it.
+
+Call `runtime.data.plcWrite(writes, { delegation, orgAddress, requestId })`. Each write is `{ tag, value }`, with a finite number or boolean; one request accepts 1–16 distinct tags. `requestId` is a stable UUID for that operator action. The app must declare and receive `plc:write` and `data:read`, plus approved machine/device/tag bindings and the `plc` harness. Edge revalidates the current actor's operator permission and the signed delegation. A display identity cannot write.
+
+Edge calls the private collector's `/api/write-scoped` endpoint with the exact device bindings and the `device-write-v1` contract. The collector validates the complete batch against current tag definitions, snapshots the driver/addresses, checks raw PLC value types/ranges, and acknowledges the bound device/tag after each write. This does not convert engineering-unit read scaling back into register values. PLC commands use raw units.
+
+The host persists command intent before dispatch and never repeats an uncertain command. A successful retry with the same UUID/body returns its retained acknowledgement; changed bodies conflict. A partially applied hardware batch cannot be rolled back: the response fails and the operator must inspect the machine. Acknowledged host ledger entries are retained for seven days; unresolved entries are retained until reviewed, with a 10,000-entry cap. Do not recycle request UUIDs or retry a failed command with a new UUID automatically.
+
+SDK 2 HDMI sessions can read only the selected app's currently approved machine scope and are bound to the active host display selection. They cannot create jobs, invoke another app or send PLC commands. An explicitly empty app-to-app machine scope may create an empty inference job; it never expands into the target app's machine grants.
+
 Edge injects the following environment variables when it installs an SDK app:
 
 | Variable | Purpose |
@@ -73,6 +85,14 @@ Third-party UI runs in a browser sandbox with an opaque origin. It cannot read E
 Use relative browser URLs, such as `fetch('api/session')`, and support a base URL (for Vite, use `base: './'`). The proxy preserves binary assets, streams SSE, and forwards WebSockets. `x-orenda-app-base-path` is available to HTTP backends that need to generate links. SDK apps cannot use localStorage, browser cookies, IndexedDB, service workers or embedded frames. Store preferences/domain state through your authenticated app API under `/data`. App cookies and arbitrary browser Authorization values are deliberately not forwarded by the proxy.
 
 ## Access and transport
+
+### Typed screenshot evidence for inference
+
+The coordinated SCADA visual-review update adds optional `imageInput` and `maxInputBytes` fields to inference limit discovery. A caller must check `imageInput === true` before sending an image. This requires matching Edge Manager and hosted AI Backend versions; it does not change app grants, model selection or network permissions.
+
+One message may contain text and one `image_url` part using an inline `data:image/jpeg;base64,...` URL. Images are allowed only in a `user` message with `dataClass: "machine-context"`, and that export class must be approved. The image is limited to 96 KiB decoded and 1400 pixels on each axis; only `detail: "high"` is supported. Remote URLs, additional images and other image formats are rejected. The existing total input byte grant still applies. The hosted token reservation uses a conservative 16,384-token image allowance alongside the ordinary text bound; provider usage and charges are settled normally.
+
+SCADA requests and returns rendered draft screenshots through the existing approved `designs.create` app operation. A capture response contains `reviewOf`, a one-use `requestId`, the exact `draftHash`, and `render: {dataUrl,width,height}`. The Agent verifies actor ownership and the pending draft before accepting it. Screenshots are transient inference evidence; the design job retains dimensions, hashes and review findings, not the image bytes. The Agent and workers retain their existing network isolation.
 
 Organization config `users[]`, `userGroups[]`, `devices[]`, and `apps[]` remain the source of access. Launchable installed apps register as `box:<Box wallet>:<appId>` and retain the existing `OrendaBoxTarget` fields. Edge performs existing authenticated organization app mutations; OrendaService alone derives publish rules and Diode whitelists. Registration failure is reported separately from a healthy installation and retried when Edge starts with organization access.
 
