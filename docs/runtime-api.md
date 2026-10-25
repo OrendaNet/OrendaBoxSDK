@@ -86,6 +86,10 @@ Use relative browser URLs, such as `fetch('api/session')`, and support a base UR
 
 ## Access and transport
 
+### Private continuation for hosted tool calls
+
+Hosted inference may also advertise `reasoningContinuation: true` in limit discovery. An updated caller can opt in with `continuationSupport: true` on its existing inference request. Retain the returned assistant `reasoningRef` unchanged alongside its content and ordered tool calls, followed by the corresponding tool results. The reference is valid only in the same authorized run. Include its `exportClasses` in the request's approved export provenance and its `inputBytes` in input-budget checks. The host retains the actual provider continuation encrypted; apps never receive raw reasoning. Compaction can omit a whole reference but must not modify it or truncate its associated assistant content/arguments. If the host rejects an expired/deleted reference with `CONTINUATION_UNAVAILABLE` before dispatch, retry once from the retained visible evidence without references. Existing paid-request reconciliation still applies. Customers cannot change model or reasoning policy through this mechanism.
+
 ### Typed screenshot evidence for inference
 
 The coordinated SCADA visual-review update adds optional `imageInput` and `maxInputBytes` fields to inference limit discovery. A caller must check `imageInput === true` before sending an image. This requires matching Edge Manager and hosted AI Backend versions; it does not change app grants, model selection or network permissions.
