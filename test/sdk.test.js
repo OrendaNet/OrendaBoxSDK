@@ -91,7 +91,7 @@ test('USB helpers use selected opaque device ids and preserve binary data with b
 
 test('manifest preserves the ten legacy capabilities and gates new scoped capabilities behind SDK 2', () => {
   const starter = structuredClone(require('../templates/node-app/orenda-app.json'));
-  assert.equal(CAPABILITIES.length, 19);
+  assert.equal(CAPABILITIES.length, 20);
   assert.ok(!starter.metadata.orenda.capabilities.some((capability) => ['network:outbound', 'display:present', 'usb:read', 'usb:write', 'hotspot:manage'].includes(capability)));
   starter.metadata.orenda.sdkVersion = '1.2';
   starter.metadata.orenda.capabilities = CAPABILITIES.slice(0, 10);
@@ -105,7 +105,7 @@ test('hotspot management requires SDK 1.2 while older contracts remain valid', (
   const manifest = { ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.2', capabilities: ['hotspot:manage'] } } };
   assert.deepEqual(validateManifest(manifest), []);
   assert.ok(validateManifest({ ...manifest, metadata: { orenda: { ...manifest.metadata.orenda, sdkVersion: '1.1' } } }).some((error) => error.includes('sdkVersion "1.2"')));
-  assert.ok(validateManifest({ ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.3' } } }).some((error) => error.includes('sdkVersion')));
+  assert.ok(validateManifest({ ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.4' } } }).some((error) => error.includes('sdkVersion')));
 });
 
 test('hotspot helper validates settings and uses scoped runtime routes', async () => {
