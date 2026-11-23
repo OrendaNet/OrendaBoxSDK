@@ -56,6 +56,8 @@ test('Mongo and metrics helpers expose easy scoped operations without database c
   await client.metrics.query('up');
   await client.metrics.queryRange('up', { start: 1, end: 61, step: 10 });
   await client.metrics.metricNames('plc_');
+  await client.metrics.publish([{ name: 'a1', value: null }]);
+  assert.deepEqual(calls[7], { url: 'http://fixture/runtime/prometheus/channels', method: 'POST', body: { channels: [{ name: 'a1', value: null }] } });
   assert.equal(calls[0].url, 'http://fixture/runtime/mongodb/collections/notes/documents');
   assert.deepEqual(calls[1].body, { filter: { status: 'open' }, limit: 10 });
   assert.equal(calls[2].method, 'PUT');
