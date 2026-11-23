@@ -84,6 +84,8 @@ await runtime.hotspot.configure({ autoStart: true }); // Edge 0.2.52+: prefer ho
 
 Keep these helpers on your server. The browser calls your own authenticated app API; it never receives the runtime token or proxy secret. Check the user’s roles before performing app mutations. PLC and Prometheus read capabilities cover their data across the Box; MongoDB access is isolated to the app’s own database. No service URL, database setup, username or password is required in app code. Enable only the capabilities you use in `metadata.orenda.capabilities`, then submit them for review.
 
+Publish numeric channels from a native driver or JavaScript adapter with the [managed measurement API](docs/measurement-export.md).
+
 See the [PLC, metrics and MongoDB cookbook](docs/core-services.md), [USB barcode scanners, printers, networking and HDMI guide](docs/hardware.md), [runtime APIs and ownership](docs/runtime-api.md), [manifest reference](docs/manifest.md), and [design and security constraints](docs/design-constraints.md). Existing services remain the source of their data; this SDK does not introduce another identity, organization, PLC, or database server.
 
 Apps have no Internet or LAN access unless `network:outbound` is requested and granted at installation. Core service access uses the Edge runtime facade and its individual grants. USB access is limited to selected devices; HDMI uses the Box's existing authenticated app UI through a host-managed viewer. Hotspot management runs on the Box: the app configures the WiFi name, password, internet and auto-start preference while Edge Manager owns the access point and forwarding policy. No host mounts, privileged containers, raw display sockets, or global USB access are required.
