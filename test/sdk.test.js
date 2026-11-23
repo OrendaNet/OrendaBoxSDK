@@ -40,6 +40,7 @@ test('release validation requires an ARM64 pinned artifact and safe capabilities
   assert.ok(validateManifest({ ...ready, versions: [{ ...ready.versions[0], architectures: ['arm64', 'mips'] }] }, { release: true }).length);
   assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, healthPath: '//health' } } }).length);
   assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, capabilities: ['admin'] } } }).length);
+  assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, capabilities: {} } } }).length);
 });
 
 test('Mongo and metrics helpers expose easy scoped operations without database credentials', async () => {
