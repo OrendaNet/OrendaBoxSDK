@@ -40,6 +40,7 @@ test('release validation requires an ARM64 pinned artifact and safe capabilities
   assert.ok(validateManifest({ ...ready, versions: [{ ...ready.versions[0], architectures: ['arm64', 'mips'] }] }, { release: true }).length);
   assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, healthPath: '//health' } } }).length);
   assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, capabilities: ['admin'] } } }).length);
+  assert.ok(validateManifest({ ...ready, metadata: { orenda: { ...manifest.metadata.orenda, capabilities: {} } } }).length);
 });
 
 test('Mongo and metrics helpers expose easy scoped operations without database credentials', async () => {
@@ -56,6 +57,8 @@ test('Mongo and metrics helpers expose easy scoped operations without database c
   await client.metrics.query('up');
   await client.metrics.queryRange('up', { start: 1, end: 61, step: 10 });
   await client.metrics.metricNames('plc_');
+  await client.metrics.publish([{ name: 'a1', value: null }]);
+  assert.deepEqual(calls[7], { url: 'http://fixture/runtime/prometheus/channels', method: 'POST', body: { channels: [{ name: 'a1', value: null }] } });
   assert.equal(calls[0].url, 'http://fixture/runtime/mongodb/collections/notes/documents');
   assert.deepEqual(calls[1].body, { filter: { status: 'open' }, limit: 10 });
   assert.equal(calls[2].method, 'PUT');
@@ -91,7 +94,7 @@ test('USB helpers use selected opaque device ids and preserve binary data with b
 
 test('manifest preserves the ten legacy capabilities and gates new scoped capabilities behind SDK 2', () => {
   const starter = structuredClone(require('../templates/node-app/orenda-app.json'));
-  assert.equal(CAPABILITIES.length, 19);
+  assert.equal(CAPABILITIES.length, 20);
   assert.ok(!starter.metadata.orenda.capabilities.some((capability) => ['network:outbound', 'display:present', 'usb:read', 'usb:write', 'hotspot:manage'].includes(capability)));
   starter.metadata.orenda.sdkVersion = '1.2';
   starter.metadata.orenda.capabilities = CAPABILITIES.slice(0, 10);
@@ -105,7 +108,7 @@ test('hotspot management requires SDK 1.2 while older contracts remain valid', (
   const manifest = { ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.2', capabilities: ['hotspot:manage'] } } };
   assert.deepEqual(validateManifest(manifest), []);
   assert.ok(validateManifest({ ...manifest, metadata: { orenda: { ...manifest.metadata.orenda, sdkVersion: '1.1' } } }).some((error) => error.includes('sdkVersion "1.2"')));
-  assert.ok(validateManifest({ ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.3' } } }).some((error) => error.includes('sdkVersion')));
+  assert.ok(validateManifest({ ...starter, metadata: { orenda: { ...starter.metadata.orenda, sdkVersion: '1.4' } } }).some((error) => error.includes('sdkVersion')));
 });
 
 test('hotspot helper validates settings and uses scoped runtime routes', async () => {
